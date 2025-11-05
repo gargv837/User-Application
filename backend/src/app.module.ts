@@ -9,8 +9,8 @@ import { AppService } from './app.service';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DATABASE_HOST || 'host.docker.internal',
-      port:  Number(process.env.DATABASE_PORT) || 5433,
+      host: process.env.DATABASE_HOST || 'localhost',
+      port:  Number(process.env.DATABASE_PORT) || 5432,
       username: process.env.DATABASE_USER || 'postgres',
       password: process.env.DATABASE_PASSWORD || 'vaibhav',
       database: process.env.DATABASE_NAME || 'user_management_db',

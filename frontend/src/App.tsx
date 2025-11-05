@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { getUsers, createUser, updateUser, deleteUser } from "./api/users";
 
 interface User {
@@ -8,42 +9,68 @@ interface User {
 }
 
 function App() {
-  const [users, setUsers] = useState<User[]>([]);
   const [form, setForm] = useState({ name: "", email: "" });
   const [editId, setEditId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0);
+  const [limit, setLimit] = useState(5);
+  const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
 
-  const fetchUsers = async () => {
-    const res = await getUsers({ page, limit });
-    setUsers(res.data.data);
-    setTotal(res.data.total);
-  };
+  const { data, isLoading, isError } = useQuery<{
+    data: User[];
+    total: number;
+    page: number;
+    limit: number;
+  }>({
+    queryKey: ["users", page, limit, search],
+    queryFn: async () => {
+      const res = await getUsers({ page, limit, search: search || undefined });
+      return res.data as { data: User[]; total: number; page: number; limit: number };
+    },
+    placeholderData: keepPreviousData,
+  });
 
-  useEffect(() => {
-    fetchUsers();
-  }, [page, limit]);
+  const users: User[] = data?.data ?? [];
+  const total = data?.total ?? 0;
+
+  const createMutation = useMutation({
+    mutationFn: (payload: { name: string; email: string }) => createUser(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: { name?: string; email?: string } }) =>
+      updateUser(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
     if (editId !== null) {
-      await updateUser(editId, form);
+      await updateMutation.mutateAsync({ id: editId, payload: form });
     } else {
-      await createUser(form);
+      await createMutation.mutateAsync(form);
     }
   
     // reset after submit
     setForm({ name: "", email: "" });
     setEditId(null);
-  
-    fetchUsers();
   };
 
   const handleDelete = async (id: number) => {
-    await deleteUser(id);
-    fetchUsers();
+    await deleteMutation.mutateAsync(id);
   };
 
   return (
@@ -57,6 +84,15 @@ function App() {
       }}
     >
       <h2>Users CRUD</h2>
+      <input
+        placeholder="Search by name or email"
+        value={search}
+        onChange={(e) => {
+          setPage(1);
+          setSearch(e.target.value);
+        }}
+        style={{ width: "320px", padding: "6px 8px" }}
+      />
   
       <form onSubmit={handleSubmit} style={{ display: "flex", gap: "10px" }}>
         <input
@@ -88,6 +124,8 @@ function App() {
         )}
       </form>
   
+      {isLoading && <div>Loading...</div>}
+      {isError && <div>Failed to load users.</div>}
       <table border={1} cellPadding={10} style={{ textAlign: "center" }}>
         <thead>
           <tr>
@@ -120,7 +158,7 @@ function App() {
           ))}
         </tbody>
       </table>
-      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "5px" }}>
         <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
           Previous
         </button>

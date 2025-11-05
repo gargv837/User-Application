@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -17,12 +17,20 @@ export class UsersService {
     return this.repo.save(user);
   }
 
-  async findAll(page = 1, limit = 10) {
+  async findAll(page = 1, limit = 10, search?: string) {
     const safeLimit = Math.min(Math.max(1, Number(limit)), 100);
     const safePage = Math.max(1, Number(page));
     const skip = (safePage - 1) * safeLimit;
 
+    const where = search
+      ? [
+          { name: ILike(`%${search}%`) },
+          { email: ILike(`%${search}%`) },
+        ]
+      : undefined;
+
     const [data, total] = await this.repo.findAndCount({
+      where,
       skip,
       take: safeLimit,
       order: { id: 'ASC' },
@@ -34,6 +42,7 @@ export class UsersService {
       page: safePage,
       limit: safeLimit,
       totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+      search: search || '',
     };
   }
 

@@ -13,10 +13,14 @@ export class UsersController {
   }
 
   @Get()
-  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ) {
     const pageNum = Number(page) || 1;
     const limitNum = Number(limit) || 10;
-    return this.usersService.findAll(pageNum, limitNum);
+    return this.usersService.findAll(pageNum, limitNum, search);
   }
 
   @Get(':id')
