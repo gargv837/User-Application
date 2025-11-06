@@ -1,6 +1,9 @@
 import { useReducer } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { getUsers, createUser, updateUser, deleteUser } from "../api/users";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface User {
   id: number;
@@ -9,7 +12,6 @@ interface User {
 }
 
 type UsersState = {
-  form: { name: string; email: string };
   editId: number | null;
   page: number;
   limit: number;
@@ -17,15 +19,12 @@ type UsersState = {
 };
 
 type UsersAction =
-  | { type: "setFormField"; field: "name" | "email"; value: string }
-  | { type: "resetForm" }
   | { type: "setEditId"; id: number | null }
   | { type: "setPage"; page: number }
   | { type: "setLimit"; limit: number }
   | { type: "setSearch"; search: string };
 
 const initialState: UsersState = {
-  form: { name: "", email: "" },
   editId: null,
   page: 1,
   limit: 5,
@@ -34,10 +33,6 @@ const initialState: UsersState = {
 
 function reducer(state: UsersState, action: UsersAction): UsersState {
   switch (action.type) {
-    case "setFormField":
-      return { ...state, form: { ...state.form, [action.field]: action.value } };
-    case "resetForm":
-      return { ...state, form: { name: "", email: "" } };
     case "setEditId":
       return { ...state, editId: action.id };
     case "setPage":
@@ -52,7 +47,19 @@ function reducer(state: UsersState, action: UsersAction): UsersState {
 }
 
 function Users() {
-  const [{ form, editId, page, limit, search }, dispatch] = useReducer(reducer, initialState);
+  const [{ editId, page, limit, search }, dispatch] = useReducer(reducer, initialState);
+
+  const schema = z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.email("Invalid email address"),
+  });
+
+  type FormValues = z.infer<typeof schema>;
+
+  const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", email: "" },
+  });
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = useQuery<{
@@ -94,16 +101,13 @@ function Users() {
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-  
+  const onSubmit = async (values: FormValues) => {
     if (editId !== null) {
-      await updateMutation.mutateAsync({ id: editId, payload: form });
+      await updateMutation.mutateAsync({ id: editId, payload: values });
     } else {
-      await createMutation.mutateAsync(form);
+      await createMutation.mutateAsync(values);
     }
-  
-    dispatch({ type: "resetForm" });
+    reset();
     dispatch({ type: "setEditId", id: null });
   };
 
@@ -132,29 +136,33 @@ function Users() {
         style={{ width: "320px", padding: "6px 8px" }}
       />
   
-      <form onSubmit={handleSubmit} style={{ display: "flex", gap: "10px" }}>
-        <input
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => dispatch({ type: "setFormField", field: "name", value: e.target.value })}
-          required
-        />
-  
-        <input
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => dispatch({ type: "setFormField", field: "email", value: e.target.value })}
-          required
-        />
-  
-        <button type="submit">{editId ? "Update" : "Add"}</button>
+      <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <input
+            placeholder="Name"
+            {...register("name")}
+            style={{ width: "160px", padding: "8px 10px" }}
+          />
+          {errors.name && <span style={{ color: "red", fontSize: 12 }}>{errors.name.message}</span>}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <input
+            placeholder="Email"
+            {...register("email")}
+            style={{ width: "160px", padding: "8px 10px" }}
+          />
+          {errors.email && <span style={{ color: "red", fontSize: 12 }}>{errors.email.message}</span>}
+        </div>
+
+        <button type="submit" disabled={isSubmitting}>{editId ? "Update" : "Add"}</button>
   
         {editId && (
           <button
             type="button"
             onClick={() => {
               dispatch({ type: "setEditId", id: null });
-              dispatch({ type: "resetForm" });
+              reset();
             }}
           >
             Cancel
@@ -184,8 +192,8 @@ function Users() {
                 <button
                   onClick={() => {
                     dispatch({ type: "setEditId", id: u.id });
-                    dispatch({ type: "setFormField", field: "name", value: u.name });
-                    dispatch({ type: "setFormField", field: "email", value: u.email });
+                    setValue("name", u.name);
+                    setValue("email", u.email);
                   }}
                   style={{ marginRight: "10px" }}
                 >
