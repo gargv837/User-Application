@@ -1,15 +1,17 @@
 import type { ReactNode } from "react";
-import { palette, buttonGhost } from "../styles/styles";
+import { palette } from "../../styles/styles";
+import { Button } from "../../atoms";
 
-type UsersModalProps = {
+type ModalProps = {
   open: boolean;
   title?: string;
   onClose: () => void;
   children: ReactNode;
 };
 
-export default function UsersModal({ open, title, onClose, children }: UsersModalProps) {
+export default function Modal({ open, title, onClose, children }: ModalProps) {
   if (!open) return null;
+
   return (
     <div
       style={{
@@ -36,13 +38,14 @@ export default function UsersModal({ open, title, onClose, children }: UsersModa
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <h3 style={{ margin: 0 }}>{title}</h3>
-          <button onClick={onClose} aria-label="Close" style={buttonGhost}>✕</button>
+          {title && <h3 style={{ margin: 0 }}>{title}</h3>}
+          <Button onClick={onClose} aria-label="Close" variant="ghost">
+            ✕
+          </Button>
         </div>
         <div>{children}</div>
       </div>
     </div>
   );
 }
-
 

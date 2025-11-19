@@ -91,4 +91,3 @@ export const tdStyle: React.CSSProperties = {
   borderBottom: `1px solid ${palette.border}`,
 };
 
-

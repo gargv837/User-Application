@@ -33,4 +33,3 @@ export function reducer(state: UsersState, action: UsersAction): UsersState {
   }
 }
 
-

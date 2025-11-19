@@ -17,3 +17,4 @@ export function useUsersQuery(page: number, limit: number, search: string) {
     placeholderData: keepPreviousData,
   });
 }
+

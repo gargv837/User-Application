@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { User } from "../types/types";
-import { inputStyle, buttonPrimary, buttonGhost, sectionGap } from "../styles/styles";
+import type { User } from "../../types/types";
+import { Input, Button } from "../../atoms";
+import { FormField } from "../../molecules";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -12,13 +13,13 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-type UsersFormProps = {
+type UserFormProps = {
   editingUser: User | null;
   onSubmit: (values: FormValues) => Promise<void> | void;
   onCancelEdit: () => void;
 };
 
-export default function UsersForm({ editingUser, onSubmit, onCancelEdit }: UsersFormProps) {
+export default function UserForm({ editingUser, onSubmit, onCancelEdit }: UserFormProps) {
   const {
     register,
     handleSubmit,
@@ -46,32 +47,31 @@ export default function UsersForm({ editingUser, onSubmit, onCancelEdit }: Users
 
   return (
     <form onSubmit={handleSubmit(submit)} style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <input placeholder="Name" {...register("name")} style={inputStyle} />
-        {errors.name && <span style={{ color: "red", fontSize: 12 }}>{errors.name.message}</span>}
-      </div>
+      <FormField error={errors.name?.message}>
+        <Input placeholder="Name" {...register("name")} />
+      </FormField>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <input placeholder="Email" {...register("email")} style={inputStyle} />
-        {errors.email && <span style={{ color: "red", fontSize: 12 }}>{errors.email.message}</span>}
-      </div>
+      <FormField error={errors.email?.message}>
+        <Input placeholder="Email" {...register("email")} />
+      </FormField>
 
-      <button type="submit" disabled={isSubmitting} style={buttonPrimary}>{editingUser ? "Update" : "Add"}</button>
+      <Button type="submit" disabled={isSubmitting} variant="primary">
+        {editingUser ? "Update" : "Add"}
+      </Button>
 
       {editingUser && (
-        <button
+        <Button
           type="button"
           onClick={() => {
             onCancelEdit();
             reset({ name: "", email: "" });
           }}
-          style={buttonGhost}
+          variant="ghost"
         >
           Cancel
-        </button>
+        </Button>
       )}
     </form>
   );
 }
-
 
