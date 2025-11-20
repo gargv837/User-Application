@@ -1,41 +1,75 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
-import { User } from './user.entity';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private repo: Repository<User>,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  create(dto: CreateUserDto) {
-    const user = this.repo.create(dto);
-    return this.repo.save(user);
+  async create(dto: CreateUserDto) {
+    const last = await this.prisma.customer.findFirst({
+      orderBy: { userid: 'desc' },
+      select: { userid: true },
+    });
+  
+    const nextUserId = last ? last.userid + 1 : 1;
+  
+    return this.prisma.customer.create({
+      data: {
+        ...dto,
+        userid: nextUserId,
+      },
+    });
   }
 
-  async findAll(page = 1, limit = 10, search?: string) {
+  async findAll(page?: number, limit?: number, search?: string) {
+    const trimmedSearch = search?.trim();
+    const orConditions: Array<Record<string, unknown>> = [];
+  
+    if (trimmedSearch) {
+      orConditions.push({
+        phonenumber: { contains: trimmedSearch, mode: 'insensitive' },
+      });
+  
+      const idSearch = Number(trimmedSearch);
+      if (!Number.isNaN(idSearch)) {
+        orConditions.push({ id: idSearch });
+      }
+    }
+  
+    const where = orConditions.length ? { OR: orConditions } : undefined;
+
+    if (!page && !limit) {
+      const data = await this.prisma.customer.findMany({
+        where,
+        orderBy: { id: 'desc' },
+      });
+  
+      return {
+        data,
+        total: data.length,
+        page: null,
+        limit: null,
+        totalPages: 1,
+        search: search || '',
+      };
+    }
+  
     const safeLimit = Math.min(Math.max(1, Number(limit)), 100);
     const safePage = Math.max(1, Number(page));
     const skip = (safePage - 1) * safeLimit;
-
-    const where = search
-      ? [
-          { name: ILike(`%${search}%`) },
-          { email: ILike(`%${search}%`) },
-        ]
-      : undefined;
-
-    const [data, total] = await this.repo.findAndCount({
-      where,
-      skip,
-      take: safeLimit,
-      order: { id: 'ASC' },
-    });
-
+  
+    const [data, total] = await Promise.all([
+      this.prisma.customer.findMany({
+        where,
+        skip,
+        take: safeLimit,
+        orderBy: { id: 'desc' },
+      }),
+      this.prisma.customer.count({ where }),
+    ]);
+  
     return {
       data,
       total,
@@ -45,21 +79,32 @@ export class UsersService {
       search: search || '',
     };
   }
+  
 
   async findOne(id: number) {
-    const user = await this.repo.findOne({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+    const customer = await this.prisma.customer.findUnique({
+      where: { id },
+    });
+    if (!customer) throw new NotFoundException('Customer not found');
+    return customer;
   }
 
   async update(id: number, dto: UpdateUserDto) {
-    await this.repo.update(id, dto);
+    await this.prisma.customer.update({
+      where: { id },
+      data: dto,
+    });
     return this.findOne(id);
   }
 
   async remove(id: number) {
-    const result = await this.repo.delete(id);
-    if (!result.affected) throw new NotFoundException('User not found');
-    return { message: 'User deleted' };
+    try {
+      await this.prisma.customer.delete({
+        where: { id },
+      });
+      return { message: 'Customer deleted' };
+    } catch (error) {
+      throw new NotFoundException('Customer not found');
+    }
   }
 }

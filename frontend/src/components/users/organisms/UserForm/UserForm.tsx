@@ -7,8 +7,7 @@ import { Input, Button } from "../../atoms";
 import { FormField } from "../../molecules";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
+  phonenumber: z.string().min(1, "Phone number is required"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -19,7 +18,11 @@ type UserFormProps = {
   onCancelEdit: () => void;
 };
 
-export default function UserForm({ editingUser, onSubmit, onCancelEdit }: UserFormProps) {
+export default function UserForm({
+  editingUser,
+  onSubmit,
+  onCancelEdit,
+}: UserFormProps) {
   const {
     register,
     handleSubmit,
@@ -28,31 +31,29 @@ export default function UserForm({ editingUser, onSubmit, onCancelEdit }: UserFo
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "" },
+    defaultValues: { phonenumber: "" },
   });
 
   useEffect(() => {
     if (editingUser) {
-      setValue("name", editingUser.name);
-      setValue("email", editingUser.email);
+      setValue("phonenumber", editingUser.phonenumber);
     } else {
-      reset({ name: "", email: "" });
+      reset({ phonenumber: "" });
     }
   }, [editingUser, reset, setValue]);
 
   const submit = async (values: FormValues) => {
     await onSubmit(values);
-    reset({ name: "", email: "" });
+    reset({ phonenumber: "" });
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-      <FormField error={errors.name?.message}>
-        <Input placeholder="Name" {...register("name")} />
-      </FormField>
-
-      <FormField error={errors.email?.message}>
-        <Input placeholder="Email" {...register("email")} />
+    <form
+      onSubmit={handleSubmit(submit)}
+      style={{ display: "flex", gap: 14, flexWrap: "wrap" }}
+    >
+      <FormField error={errors.phonenumber?.message}>
+        <Input placeholder="Phone Number" {...register("phonenumber")} />
       </FormField>
 
       <Button type="submit" disabled={isSubmitting} variant="primary">
@@ -64,7 +65,7 @@ export default function UserForm({ editingUser, onSubmit, onCancelEdit }: UserFo
           type="button"
           onClick={() => {
             onCancelEdit();
-            reset({ name: "", email: "" });
+            reset({ phonenumber: "" });
           }}
           variant="ghost"
         >
@@ -74,4 +75,3 @@ export default function UserForm({ editingUser, onSubmit, onCancelEdit }: UserFo
     </form>
   );
 }
-

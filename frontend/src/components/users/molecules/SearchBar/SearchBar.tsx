@@ -11,7 +11,7 @@ export default function SearchBar({
   value,
   onChange,
   onResetToFirstPage,
-  placeholder = "Search by name or email",
+  placeholder = "Search by id or phone number",
 }: SearchBarProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;

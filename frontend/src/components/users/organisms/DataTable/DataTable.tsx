@@ -14,8 +14,7 @@ export default function DataTable({ users, onEdit, onDelete }: DataTableProps) {
       <thead>
         <tr>
           <TableHeader>ID</TableHeader>
-          <TableHeader>Name</TableHeader>
-          <TableHeader>Email</TableHeader>
+          <TableHeader>Phone Number</TableHeader>
           <TableHeader>Actions</TableHeader>
         </tr>
       </thead>
@@ -23,8 +22,7 @@ export default function DataTable({ users, onEdit, onDelete }: DataTableProps) {
         {users.map((user) => (
           <tr key={user.id}>
             <TableCell>{user.id}</TableCell>
-            <TableCell>{user.name}</TableCell>
-            <TableCell>{user.email}</TableCell>
+            <TableCell>{user.phonenumber}</TableCell>
             <TableCell>
               <ActionButtons
                 onEdit={() => onEdit(user)}
@@ -37,4 +35,3 @@ export default function DataTable({ users, onEdit, onDelete }: DataTableProps) {
     </Table>
   );
 }
-

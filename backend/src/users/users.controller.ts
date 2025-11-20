@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-@Controller('users')
+@Controller('customers')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -18,6 +18,9 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ) {
+    if (!page && !limit) {
+      return this.usersService.findAll(undefined, undefined, search);
+    }
     const pageNum = Number(page) || 1;
     const limitNum = Number(limit) || 10;
     return this.usersService.findAll(pageNum, limitNum, search);

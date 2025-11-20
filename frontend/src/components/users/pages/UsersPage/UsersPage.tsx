@@ -1,22 +1,47 @@
 import { useReducer, useState } from "react";
-import { useUsersQuery, useUsersHandlers, useUsersDerived, reducer, initialState } from "../../hooks";
+import {
+  useUsersQuery,
+  useUsersHandlers,
+  useUsersDerived,
+  reducer,
+  initialState,
+} from "../../hooks";
 import { PageTemplate } from "../../templates";
-import { UserForm, DataTable, PaginationControls, Modal } from "../../organisms";
+import {
+  UserForm,
+  DataTable,
+  PaginationControls,
+  Modal,
+} from "../../organisms";
 import { SearchBar } from "../../molecules";
 import { Text, Button } from "../../atoms";
 import "../../styles/Users.css";
+import { exportUsers } from "../../../../api/users";
+import { convertToCSV, downloadCSV } from "../../utils/csv";
 
 export default function UsersPage() {
-  const [{ editId, page, limit, search }, dispatch] = useReducer(reducer, initialState);
+  const [{ editId, page, limit, search }, dispatch] = useReducer(
+    reducer,
+    initialState
+  );
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const { data, isLoading, isError } = useUsersQuery(page, limit, search);
   const { users, total, editingUser } = useUsersDerived(data, editId);
   const { onSubmit, handleDelete } = useUsersHandlers(editId, dispatch);
 
-  const handleAddSubmit = async (values: { name: string; email: string }) => {
+  // Updated to use phonenumber
+  const handleAddSubmit = async (values: { phonenumber: string }) => {
     await onSubmit(values);
     setAddModalOpen(false);
   };
+
+  const handleExport = async () => {
+    const response = await exportUsers();
+    const allUsers = response.data?.data ?? [];
+
+    const csv = convertToCSV(allUsers);
+    downloadCSV(csv, "customers.csv");
+  }; 
 
   return (
     <div className="users-container">
@@ -26,14 +51,20 @@ export default function UsersPage() {
           onResetToFirstPage={() => dispatch({ type: "setPage", page: 1 })}
           onChange={(value) => dispatch({ type: "setSearch", search: value })}
         />
-        <Button onClick={() => setAddModalOpen(true)}>Add User</Button>
+        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+          <Button onClick={handleExport}>Export</Button>
+          <Button onClick={() => setAddModalOpen(true)}>Add User</Button>
+        </div>
+
         {isLoading && <Text>Loading...</Text>}
         {isError && <Text variant="error">Failed to load users.</Text>}
+
         <DataTable
           users={users}
           onEdit={(u) => dispatch({ type: "setEditId", id: u.id })}
           onDelete={handleDelete}
         />
+
         <PaginationControls
           page={page}
           limit={limit}
@@ -42,6 +73,8 @@ export default function UsersPage() {
           onLimitChange={(l) => dispatch({ type: "setLimit", limit: l })}
         />
       </PageTemplate>
+
+      {/* Add Modal */}
       <Modal
         open={isAddModalOpen}
         title="Add User"
@@ -53,6 +86,8 @@ export default function UsersPage() {
           onCancelEdit={() => setAddModalOpen(false)}
         />
       </Modal>
+
+      {/* Edit Modal */}
       <Modal
         open={Boolean(editingUser)}
         title="Edit User"
@@ -69,4 +104,3 @@ export default function UsersPage() {
     </div>
   );
 }
-

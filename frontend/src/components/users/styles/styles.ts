@@ -69,7 +69,7 @@ export const buttonGhost: React.CSSProperties = {
 };
 
 export const tableBase: React.CSSProperties = {
-  textAlign: "left",
+  textAlign: "center",
   width: "100%",
   borderCollapse: "separate",
   borderSpacing: 0,

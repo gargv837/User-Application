@@ -5,7 +5,7 @@ export function useUsersHandlers(editId: number | null, dispatch: any) {
   const { createMutation, updateMutation, deleteMutation } = useUserMutations();
 
   const onSubmit = useCallback(
-    async (values: { name: string; email: string }) => {
+    async (values: { phonenumber: string }) => {
       if (editId !== null) {
         await updateMutation.mutateAsync({ id: editId, payload: values });
       } else {
@@ -25,4 +25,3 @@ export function useUsersHandlers(editId: number | null, dispatch: any) {
 
   return { onSubmit, handleDelete };
 }
-

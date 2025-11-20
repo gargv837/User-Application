@@ -7,7 +7,7 @@ type ActionButtonsProps = {
 
 export default function ActionButtons({ onEdit, onDelete }: ActionButtonsProps) {
   return (
-    <div style={{ display: "flex", gap: 8 }}>
+    <div style={{ display: "flex", justifyContent: "center", textAlign: "center", gap: 8 }}>
       <Button variant="primary" onClick={onEdit}>
         Edit
       </Button>

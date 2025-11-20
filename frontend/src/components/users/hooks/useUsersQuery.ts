@@ -1,5 +1,5 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { getUsers } from "../../../api/users";
+import { getUsers, exportUsers } from "../../../api/users";
 import type { User } from "../types/types";
 
 export function useUsersQuery(page: number, limit: number, search: string) {
@@ -15,6 +15,18 @@ export function useUsersQuery(page: number, limit: number, search: string) {
       return res.data;
     },
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useExportUsersQuery(enabled: boolean) {
+  return useQuery({
+    queryKey: ["export-users"],
+    queryFn: async () => {
+      const res = await exportUsers();
+      return res.data?.data ?? [];
+    },
+    enabled,
+    staleTime: 0,
   });
 }
 

@@ -2,13 +2,13 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-bullseye
     container_name: postgres_db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: vaibhav
-      POSTGRES_DB: user_management_db
+      POSTGRES_DB: e_commerce
     ports:
       - "5433:5432"
     volumes:
@@ -28,11 +28,14 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      # Prisma connection URL (required)
+      DATABASE_URL: postgresql://postgres:vaibhav@host.docker.internal:5433/e_commerce
+      # Individual database variables (for backward compatibility)
       DATABASE_HOST: host.docker.internal
       DATABASE_PORT: 5433
       DATABASE_USER: postgres
       DATABASE_PASSWORD: vaibhav
-      DATABASE_NAME: user_management_db
+      DATABASE_NAME: e_commerce
     ports:
       - "3000:3000"
     working_dir: /app
@@ -51,7 +54,7 @@ services:
       backend:
         condition: service_healthy
     environment:
-      VITE_API_URL: http://localhost:3000/users
+      VITE_API_URL: http://localhost:3000/customers
     ports:
       - "5173:5173"
     working_dir: /app

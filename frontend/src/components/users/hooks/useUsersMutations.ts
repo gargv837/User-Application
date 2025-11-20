@@ -5,7 +5,7 @@ export function useUserMutations() {
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: (payload: { name: string; email: string }) => createUser(payload),
+    mutationFn: (payload: { phonenumber: string }) => createUser(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
@@ -17,7 +17,7 @@ export function useUserMutations() {
       payload,
     }: {
       id: number;
-      payload: { name?: string; email?: string };
+      payload: { phonenumber?: string };
     }) => updateUser(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -37,4 +37,3 @@ export function useUserMutations() {
     deleteMutation,
   };
 }
-
