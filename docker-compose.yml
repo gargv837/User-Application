@@ -3,6 +3,8 @@ version: "3.8"
 services:
   postgres:
     image: postgres:16-bullseye
+    mem_limit: 1G
+    cpus: 2
     container_name: postgres_db
     restart: always
     environment:
@@ -23,6 +25,8 @@ services:
   backend:
     build: ./backend
     container_name: nest_api
+    mem_limit: 1G
+    cpus: 2
     restart: always
     depends_on:
       postgres:

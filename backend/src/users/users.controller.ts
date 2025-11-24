@@ -1,7 +1,19 @@
-import { Body, Controller, Get, Post, Param, Patch, Delete, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Patch,
+  Delete,
+  Query,
+  Res,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import type { Response } from 'express';
 
 @Controller('customers')
 export class UsersController {
@@ -18,26 +30,33 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ) {
+    const searchParam = search?.trim() || undefined;
+    
     if (!page && !limit) {
-      return this.usersService.findAll(undefined, undefined, search);
+      return this.usersService.findAll(undefined, undefined, searchParam);
     }
     const pageNum = Number(page) || 1;
     const limitNum = Number(limit) || 10;
-    return this.usersService.findAll(pageNum, limitNum, search);
+    return this.usersService.findAll(pageNum, limitNum, searchParam);
+  }
+
+  @Get('export')
+  export(@Res() res: Response) {
+    return this.usersService.streamExport(res);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return this.usersService.update(+id, dto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
+    return this.usersService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.remove(id);
   }
 }

@@ -16,8 +16,7 @@ import {
 import { SearchBar } from "../../molecules";
 import { Text, Button } from "../../atoms";
 import "../../styles/Users.css";
-import { exportUsers } from "../../../../api/users";
-import { convertToCSV, downloadCSV } from "../../utils/csv";
+import { exportUsersStream } from "../../../../api/users";
 
 export default function UsersPage() {
   const [{ editId, page, limit, search }, dispatch] = useReducer(
@@ -36,12 +35,8 @@ export default function UsersPage() {
   };
 
   const handleExport = async () => {
-    const response = await exportUsers();
-    const allUsers = response.data?.data ?? [];
-
-    const csv = convertToCSV(allUsers);
-    downloadCSV(csv, "customers.csv");
-  }; 
+    await exportUsersStream();
+  };
 
   return (
     <div className="users-container">
