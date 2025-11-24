@@ -6,4 +6,6 @@ export { default as Table } from "./Table/Table";
 export { default as TableHeader } from "./TableHeader/TableHeader";
 export { default as TableCell } from "./TableCell/TableCell";
 export { default as Label } from "./Label/Label";
+export { default as ExportTimer } from "./ExportTimer/ExportTimer";
+export { default as ExportStats } from "./ExportStats/ExportStats";
 

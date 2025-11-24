@@ -15,25 +15,40 @@ export const deleteUser = (id: number) =>
   axios.delete(`${API}/${id}`);
 
 export const exportUsersStream = async () => {
-  const response = await fetch(`${API.replace(/\/$/, "")}/export`);
+  const fetchStartTime = performance.now();
 
-  if (!response.ok || !response.body) {
+  // First request the HEADERS only (fast)
+  const response = await fetch(`${API.replace(/\/$/, "")}/export`, {
+    method: "GET",
+  });
+  const fetchEndTime = performance.now();
+
+  if (!response.ok) {
     throw new Error("Failed to export users");
   }
 
-  const blob = await response.blob();
-
+  // Extract filename from Content-Disposition
   const disposition = response.headers.get("Content-Disposition");
   const match = disposition?.match(/filename="?([^"]+)"?/i);
   const filename = match?.[1] ?? "customers.csv";
 
-  const url = window.URL.createObjectURL(blob);
+  // IMPORTANT: Instead of blob() → use direct browser download
+  const downloadStartTime = performance.now();
+
+  const downloadUrl = `${API.replace(/\/$/, "")}/export`;
   const anchor = document.createElement("a");
-  anchor.href = url;
+  anchor.href = downloadUrl;
   anchor.download = filename;
   document.body.appendChild(anchor);
   anchor.click();
-  document.body.removeChild(anchor);
-  window.URL.revokeObjectURL(url);
+  anchor.remove();
+
+  const downloadEndTime = performance.now();
+
+  return {
+    fetchDuration: fetchEndTime - fetchStartTime,
+    downloadSetupDuration: downloadEndTime - downloadStartTime,
+    totalDuration: downloadEndTime - fetchStartTime,
+  };
 };
 

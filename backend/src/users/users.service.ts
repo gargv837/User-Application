@@ -156,15 +156,13 @@ export class UsersService {
       const dbStream = client.query(query);
       const csvStream = format({ headers: true });
 
-      // Set headers for CSV file download
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader(
-        'Content-Disposition',
-        'attachment; filename="customers.csv"',
-      );
-      res.setHeader('Cache-Control', 'no-store, no-transform');
-      res.setHeader('Transfer-Encoding', 'chunked');
-      res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+      res.set({
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="customers.csv"',
+        'Cache-Control': 'no-store, no-transform',
+        'Transfer-Encoding': 'chunked',
+        'Access-Control-Expose-Headers': 'Content-Disposition',
+      });      
 
       try {
         res.flushHeaders?.();
